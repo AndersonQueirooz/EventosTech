@@ -9,13 +9,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AWSConfig {
 
-    @Value("${aws.bucket.name}")
-    private String bucketName;
+    @Value("${aws.region}")
+    private String awsregion;
 
     @Bean
     public AmazonS3 createS3Instance() {
         return AmazonS3ClientBuilder.standard()
-                .withRegion(bucketName)
+                .withRegion(awsregion)
                 .build();
     }
 }

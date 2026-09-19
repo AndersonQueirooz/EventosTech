@@ -3,6 +3,7 @@ package com.queiroz.EventosTech.services;
 import com.amazonaws.services.s3.AmazonS3;
 import com.queiroz.EventosTech.domain.event.Event;
 import com.queiroz.EventosTech.domain.event.EventRequestDTO;
+import com.queiroz.EventosTech.repositories.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ public class EventServices {
     @Autowired
     private AmazonS3 s3client;
 
+    @Autowired
+    private EventRepository eventRepository;
+
    public Event createEvent(EventRequestDTO data) {
        String imgUrl = null;
 
@@ -37,6 +41,9 @@ public class EventServices {
        newEvent.setDate(new Date(data.date()));
        newEvent.setEventUrl(data.eventUrl());
        newEvent.setImgUrl(imgUrl);
+       newEvent.setRemote(data.remote());
+
+       eventRepository.save(newEvent);
 
        return newEvent;
    }
