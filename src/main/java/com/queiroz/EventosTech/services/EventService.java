@@ -3,9 +3,13 @@ package com.queiroz.EventosTech.services;
 import com.amazonaws.services.s3.AmazonS3;
 import com.queiroz.EventosTech.domain.event.Event;
 import com.queiroz.EventosTech.domain.event.EventRequestDTO;
+import com.queiroz.EventosTech.domain.event.EventResponseDTO;
 import com.queiroz.EventosTech.repositories.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,11 +17,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 @Service
-public class EventServices {
+public class EventService {
 
     @Value("${aws.bucket.name}")
     private String bucketName;
@@ -27,6 +32,9 @@ public class EventServices {
 
     @Autowired
     private EventRepository eventRepository;
+
+    @Autowired
+    private AddressService addressService;
 
    public Event createEvent(EventRequestDTO data) {
        String imgUrl = null;
@@ -45,7 +53,29 @@ public class EventServices {
 
        eventRepository.save(newEvent);
 
+       if(!data.remote()){
+           this.addressService.createAddres(data, newEvent);
+       }
+
        return newEvent;
+   }
+
+   public List<EventResponseDTO> getUpcomingEvent(int page, int size) {
+       Pageable pageable = PageRequest.of(page, size);
+       Page<Event> eventPage = eventRepository.findUpcomingEvents(new Date(), pageable);
+
+       return eventPage.map(event -> new EventResponseDTO(
+               event.getId(),
+               event.getTitle(),
+               event.getDescription(),
+               event.getDate(),
+               "",
+               "",
+               event.getRemote(),
+               event.getEventUrl(),
+               event.getImgUrl()
+
+       )).stream().toList();
    }
 
    private String UploadImage(MultipartFile MultipartFile) {
